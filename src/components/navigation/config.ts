@@ -22,6 +22,12 @@ export const navigationItems: NavItem[] = [
     roles: ['ADMIN']
   },
   {
+    label: 'Tasks',
+    href: '/tasks',
+    icon: '✅',
+    roles: ['ADMIN', 'EDITOR', 'VIEWER']
+  },
+  {
     label: 'Leads',
     href: '/leads',
     icon: '🎯',

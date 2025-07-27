@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,80 +8,323 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum Role {
-  ADMIN
-  EDITOR
-  VIEWER
-  PARTNER
-}
-
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  role      Role
-  username  String   @unique
-  password  String?  // Only for Stytch users
-  clerkId   String?  @unique // Only for Clerk users
-  firstName String?
-  lastName  String?
-  phone     String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // CRM Relations
-  createdLeads    Lead[]    @relation("LeadCreatedBy")
-  assignedLeads   Lead[]    @relation("LeadAssignedTo")
-  createdContacts Contact[] @relation("ContactCreatedBy")
-  assignedContacts Contact[] @relation("ContactAssignedTo")
-  createdAccounts Account[] @relation("AccountCreatedBy")
-  assignedAccounts Account[] @relation("AccountAssignedTo")
-  createdDeals    Deal[]    @relation("DealCreatedBy")
-  assignedDeals   Deal[]    @relation("DealAssignedTo")
-  createdProjects Project[] @relation("ProjectCreatedBy")
-  managedProjects Project[] @relation("ProjectManager")
-  assignedTasks   Task[]    @relation("TaskAssignedTo")
-  createdTasks    Task[]    @relation("TaskCreatedBy")
-  timeEntries     TimeEntry[]
-  createdActivities Activity[] @relation("ActivityCreatedBy")
-  assignedActivities Activity[] @relation("ActivityAssignedTo")
+  id                 String      @id @default(cuid())
+  email              String      @unique
+  role               Role
+  username           String      @unique
+  password           String?
+  clerkId            String?     @unique
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  firstName          String?
+  isActive           Boolean     @default(true)
+  lastName           String?
+  phone              String?
+  assignedAccounts   Account[]   @relation("AccountAssignedTo")
+  createdAccounts    Account[]   @relation("AccountCreatedBy")
+  assignedActivities Activity[]  @relation("ActivityAssignedTo")
+  createdActivities  Activity[]  @relation("ActivityCreatedBy")
+  assignedContacts   Contact[]   @relation("ContactAssignedTo")
+  createdContacts    Contact[]   @relation("ContactCreatedBy")
+  assignedDeals      Deal[]      @relation("DealAssignedTo")
+  createdDeals       Deal[]      @relation("DealCreatedBy")
+  assignedLeads      Lead[]      @relation("LeadAssignedTo")
+  createdLeads       Lead[]      @relation("LeadCreatedBy")
+  createdProjects    Project[]   @relation("ProjectCreatedBy")
+  managedProjects    Project[]   @relation("ProjectManager")
+  assignedTasks      Task[]      @relation("TaskAssignedTo")
+  createdTasks       Task[]      @relation("TaskCreatedBy")
+  timeEntries        TimeEntry[]
+  
+  // Task Management Relations
+  createdTaskManagement    TaskManagement[]        @relation("TaskManagementCreatedBy")
+  assignedTaskManagement   TaskManagement[]        @relation("TaskManagementAssignedTo")
+  taskManagementComments   TaskManagementComment[] @relation("TaskManagementCommentUser")
+  createdTaskTemplates     TaskManagementTemplate[] @relation("TaskManagementTemplateCreatedBy")
+  createdRecurringTasks    RecurringTaskManagement[] @relation("RecurringTaskManagementCreatedBy")
+  assignedRecurringTasks   RecurringTaskManagement[] @relation("RecurringTaskManagementAssignedTo")
 
   @@map("users")
 }
 
 model Lead {
-  id          String     @id @default(cuid())
-  firstName   String
-  lastName    String
-  email       String?
-  phone       String?
-  company     String?
-  jobTitle    String?
-  source      LeadSource @default(OTHER)
-  status      LeadStatus @default(NEW)
-  rating      LeadRating @default(COLD)
-  score       Int        @default(0)
-  description String?
-  customFields Json?
-  tags        String[]
-  
-  assignedToId String?
-  assignedTo   User?   @relation("LeadAssignedTo", fields: [assignedToId], references: [id])
-  createdById  String
-  createdBy    User    @relation("LeadCreatedBy", fields: [createdById], references: [id])
-  
+  id                 String     @id @default(cuid())
+  firstName          String
+  lastName           String
+  email              String?
+  phone              String?
+  company            String?
+  jobTitle           String?
+  source             LeadSource @default(OTHER)
+  status             LeadStatus @default(NEW)
+  rating             LeadRating @default(COLD)
+  description        String?
+  customFields       Json?
+  tags               String[]
+  assignedToId       String?
+  createdById        String
   convertedAt        DateTime?
   convertedContactId String?
   convertedAccountId String?
   convertedDealId    String?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
   lastContactedAt    DateTime?
-  
-  activities Activity[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  score              Int        @default(0)
+  activities         Activity[]
+  assignedTo         User?      @relation("LeadAssignedTo", fields: [assignedToId], references: [id])
+  createdBy          User       @relation("LeadCreatedBy", fields: [createdById], references: [id])
 
   @@map("leads")
+}
+
+model Account {
+  id              String       @id @default(cuid())
+  name            String
+  website         String?
+  industry        String?
+  type            AccountType  @default(PROSPECT)
+  size            CompanySize?
+  revenue         Decimal?
+  employees       Int?
+  description     String?
+  customFields    Json?
+  tags            String[]
+  parentAccountId String?
+  assignedToId    String?
+  createdById     String
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  assignedTo      User?        @relation("AccountAssignedTo", fields: [assignedToId], references: [id])
+  createdBy       User         @relation("AccountCreatedBy", fields: [createdById], references: [id])
+  parentAccount   Account?     @relation("AccountHierarchy", fields: [parentAccountId], references: [id])
+  childAccounts   Account[]    @relation("AccountHierarchy")
+  activities      Activity[]
+  contacts        Contact[]
+  deals           Deal[]
+  projects        Project[]
+
+  @@map("accounts")
+}
+
+model Contact {
+  id           String     @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String?
+  phone        String?
+  mobilePhone  String?
+  jobTitle     String?
+  department   String?
+  isPrimary    Boolean    @default(false)
+  description  String?
+  customFields Json?
+  tags         String[]
+  accountId    String
+  assignedToId String?
+  createdById  String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  activities   Activity[]
+  account      Account    @relation(fields: [accountId], references: [id])
+  assignedTo   User?      @relation("ContactAssignedTo", fields: [assignedToId], references: [id])
+  createdBy    User       @relation("ContactCreatedBy", fields: [createdById], references: [id])
+  deals        Deal[]
+
+  @@map("contacts")
+}
+
+model Deal {
+  id                String     @id @default(cuid())
+  name              String
+  amount            Decimal?
+  currency          String     @default("USD")
+  probability       Int        @default(0)
+  expectedCloseDate DateTime?
+  actualCloseDate   DateTime?
+  source            String?
+  type              DealType   @default(NEW_BUSINESS)
+  description       String?
+  customFields      Json?
+  tags              String[]
+  accountId         String?
+  contactId         String?
+  stageId           String
+  assignedToId      String?
+  createdById       String
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  activities        Activity[]
+  account           Account?   @relation(fields: [accountId], references: [id])
+  assignedTo        User?      @relation("DealAssignedTo", fields: [assignedToId], references: [id])
+  contact           Contact?   @relation(fields: [contactId], references: [id])
+  createdBy         User       @relation("DealCreatedBy", fields: [createdById], references: [id])
+  stage             DealStage  @relation(fields: [stageId], references: [id])
+  projects          Project[]
+
+  @@map("deals")
+}
+
+model DealStage {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  probability Int      @default(0)
+  order       Int
+  isWon       Boolean  @default(false)
+  isLost      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deals       Deal[]
+
+  @@map("deal_stages")
+}
+
+model Project {
+  id               String        @id @default(cuid())
+  name             String
+  description      String?
+  status           ProjectStatus @default(PLANNING)
+  priority         Priority      @default(MEDIUM)
+  startDate        DateTime?
+  endDate          DateTime?
+  actualStartDate  DateTime?
+  actualEndDate    DateTime?
+  budget           Decimal?
+  actualCost       Decimal       @default(0)
+  currency         String        @default("USD")
+  progress         Int           @default(0)
+  customFields     Json?
+  tags             String[]
+  clientId         String?
+  dealId           String?
+  projectManagerId String?
+  createdById      String
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  activities       Activity[]
+  milestones       Milestone[]
+  client           Account?      @relation(fields: [clientId], references: [id])
+  createdBy        User          @relation("ProjectCreatedBy", fields: [createdById], references: [id])
+  deal             Deal?         @relation(fields: [dealId], references: [id])
+  projectManager   User?         @relation("ProjectManager", fields: [projectManagerId], references: [id])
+  tasks            Task[]
+  timeEntries      TimeEntry[]
+
+  @@map("projects")
+}
+
+model Task {
+  id             String      @id @default(cuid())
+  name           String
+  description    String?
+  status         TaskStatus  @default(TODO)
+  priority       Priority    @default(MEDIUM)
+  startDate      DateTime?
+  dueDate        DateTime?
+  completedDate  DateTime?
+  estimatedHours Decimal?
+  actualHours    Decimal     @default(0)
+  progress       Int         @default(0)
+  customFields   Json?
+  tags           String[]
+  projectId      String
+  milestoneId    String?
+  parentTaskId   String?
+  assignedToId   String?
+  createdById    String
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  activities     Activity[]
+  assignedTo     User?       @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
+  createdBy      User        @relation("TaskCreatedBy", fields: [createdById], references: [id])
+  milestone      Milestone?  @relation(fields: [milestoneId], references: [id])
+  parentTask     Task?       @relation("TaskHierarchy", fields: [parentTaskId], references: [id])
+  subTasks       Task[]      @relation("TaskHierarchy")
+  project        Project     @relation(fields: [projectId], references: [id])
+  timeEntries    TimeEntry[]
+
+  @@map("tasks")
+}
+
+model Milestone {
+  id            String          @id @default(cuid())
+  name          String
+  description   String?
+  dueDate       DateTime?
+  completedDate DateTime?
+  status        MilestoneStatus @default(PENDING)
+  projectId     String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  project       Project         @relation(fields: [projectId], references: [id])
+  tasks         Task[]
+
+  @@map("milestones")
+}
+
+model TimeEntry {
+  id          String    @id @default(cuid())
+  date        DateTime
+  hours       Decimal
+  description String?
+  billable    Boolean   @default(true)
+  hourlyRate  Decimal?
+  approved    Boolean   @default(false)
+  taskId      String?
+  projectId   String
+  userId      String
+  approvedBy  String?
+  approvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  project     Project   @relation(fields: [projectId], references: [id])
+  task        Task?     @relation(fields: [taskId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@map("time_entries")
+}
+
+model Activity {
+  id            String         @id @default(cuid())
+  type          ActivityType
+  subject       String
+  description   String?
+  date          DateTime
+  duration      Int?
+  status        ActivityStatus @default(PLANNED)
+  priority      Priority       @default(MEDIUM)
+  location      String?
+  customFields  Json?
+  relatedToType String
+  relatedToId   String
+  leadId        String?
+  contactId     String?
+  accountId     String?
+  dealId        String?
+  projectId     String?
+  taskId        String?
+  assignedToId  String?
+  createdById   String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  account       Account?       @relation(fields: [accountId], references: [id])
+  assignedTo    User?          @relation("ActivityAssignedTo", fields: [assignedToId], references: [id])
+  contact       Contact?       @relation(fields: [contactId], references: [id])
+  createdBy     User           @relation("ActivityCreatedBy", fields: [createdById], references: [id])
+  deal          Deal?          @relation(fields: [dealId], references: [id])
+  lead          Lead?          @relation(fields: [leadId], references: [id])
+  project       Project?       @relation(fields: [projectId], references: [id])
+  task          Task?          @relation(fields: [taskId], references: [id])
+
+  @@map("activities")
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  VIEWER
+  PARTNER
 }
 
 enum LeadSource {
@@ -112,39 +352,6 @@ enum LeadRating {
   COLD
 }
 
-model Account {
-  id          String      @id @default(cuid())
-  name        String
-  website     String?
-  industry    String?
-  type        AccountType @default(PROSPECT)
-  size        CompanySize?
-  revenue     Decimal?
-  employees   Int?
-  description String?
-  customFields Json?
-  tags        String[]
-  
-  parentAccountId String?
-  parentAccount   Account? @relation("AccountHierarchy", fields: [parentAccountId], references: [id])
-  childAccounts   Account[] @relation("AccountHierarchy")
-  
-  assignedToId String?
-  assignedTo   User?   @relation("AccountAssignedTo", fields: [assignedToId], references: [id])
-  createdById  String
-  createdBy    User    @relation("AccountCreatedBy", fields: [createdById], references: [id])
-  
-  contacts   Contact[]
-  deals      Deal[]
-  projects   Project[]
-  activities Activity[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("accounts")
-}
-
 enum AccountType {
   PROSPECT
   CUSTOMER
@@ -160,132 +367,11 @@ enum CompanySize {
   ENTERPRISE
 }
 
-model Contact {
-  id          String  @id @default(cuid())
-  firstName   String
-  lastName    String
-  email       String?
-  phone       String?
-  mobilePhone String?
-  jobTitle    String?
-  department  String?
-  isPrimary   Boolean @default(false)
-  description String?
-  customFields Json?
-  tags        String[]
-  
-  accountId String
-  account   Account @relation(fields: [accountId], references: [id])
-  
-  assignedToId String?
-  assignedTo   User?   @relation("ContactAssignedTo", fields: [assignedToId], references: [id])
-  createdById  String
-  createdBy    User    @relation("ContactCreatedBy", fields: [createdById], references: [id])
-  
-  deals      Deal[]
-  activities Activity[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("contacts")
-}
-
-model Deal {
-  id                 String    @id @default(cuid())
-  name               String
-  amount             Decimal?
-  currency           String    @default("USD")
-  probability        Int       @default(0)
-  expectedCloseDate  DateTime?
-  actualCloseDate    DateTime?
-  source             String?
-  type               DealType  @default(NEW_BUSINESS)
-  description        String?
-  customFields       Json?
-  tags               String[]
-  
-  accountId String?
-  account   Account? @relation(fields: [accountId], references: [id])
-  contactId String?
-  contact   Contact? @relation(fields: [contactId], references: [id])
-  
-  stageId String
-  stage   DealStage @relation(fields: [stageId], references: [id])
-  
-  assignedToId String?
-  assignedTo   User?   @relation("DealAssignedTo", fields: [assignedToId], references: [id])
-  createdById  String
-  createdBy    User    @relation("DealCreatedBy", fields: [createdById], references: [id])
-  
-  projects   Project[]
-  activities Activity[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("deals")
-}
-
 enum DealType {
   NEW_BUSINESS
   EXISTING_BUSINESS
   RENEWAL
   UPSELL
-}
-
-model DealStage {
-  id          String  @id @default(cuid())
-  name        String  @unique
-  probability Int     @default(0)
-  order       Int
-  isWon       Boolean @default(false)
-  isLost      Boolean @default(false)
-  
-  deals Deal[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("deal_stages")
-}
-
-model Project {
-  id              String        @id @default(cuid())
-  name            String
-  description     String?
-  status          ProjectStatus @default(PLANNING)
-  priority        Priority      @default(MEDIUM)
-  startDate       DateTime?
-  endDate         DateTime?
-  actualStartDate DateTime?
-  actualEndDate   DateTime?
-  budget          Decimal?
-  actualCost      Decimal       @default(0)
-  currency        String        @default("USD")
-  progress        Int           @default(0)
-  customFields    Json?
-  tags            String[]
-  
-  clientId String?
-  client   Account? @relation(fields: [clientId], references: [id])
-  dealId   String?
-  deal     Deal?    @relation(fields: [dealId], references: [id])
-  
-  projectManagerId String?
-  projectManager   User?   @relation("ProjectManager", fields: [projectManagerId], references: [id])
-  createdById      String
-  createdBy        User    @relation("ProjectCreatedBy", fields: [createdById], references: [id])
-  
-  tasks       Task[]
-  milestones  Milestone[]
-  timeEntries TimeEntry[]
-  activities  Activity[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("projects")
 }
 
 enum ProjectStatus {
@@ -303,45 +389,6 @@ enum Priority {
   URGENT
 }
 
-model Task {
-  id             String     @id @default(cuid())
-  name           String
-  description    String?
-  status         TaskStatus @default(TODO)
-  priority       Priority   @default(MEDIUM)
-  startDate      DateTime?
-  dueDate        DateTime?
-  completedDate  DateTime?
-  estimatedHours Decimal?
-  actualHours    Decimal    @default(0)
-  progress       Int        @default(0)
-  customFields   Json?
-  tags           String[]
-  
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id])
-  
-  milestoneId String?
-  milestone   Milestone? @relation(fields: [milestoneId], references: [id])
-  
-  parentTaskId String?
-  parentTask   Task?   @relation("TaskHierarchy", fields: [parentTaskId], references: [id])
-  subTasks     Task[]  @relation("TaskHierarchy")
-  
-  assignedToId String?
-  assignedTo   User?   @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
-  createdById  String
-  createdBy    User    @relation("TaskCreatedBy", fields: [createdById], references: [id])
-  
-  timeEntries TimeEntry[]
-  activities  Activity[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("tasks")
-}
-
 enum TaskStatus {
   TODO
   IN_PROGRESS
@@ -350,96 +397,10 @@ enum TaskStatus {
   BLOCKED
 }
 
-model Milestone {
-  id            String          @id @default(cuid())
-  name          String
-  description   String?
-  dueDate       DateTime?
-  completedDate DateTime?
-  status        MilestoneStatus @default(PENDING)
-  
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id])
-  
-  tasks Task[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("milestones")
-}
-
 enum MilestoneStatus {
   PENDING
   COMPLETED
   OVERDUE
-}
-
-model TimeEntry {
-  id          String   @id @default(cuid())
-  date        DateTime
-  hours       Decimal
-  description String?
-  billable    Boolean  @default(true)
-  hourlyRate  Decimal?
-  approved    Boolean  @default(false)
-  
-  taskId String?
-  task   Task?   @relation(fields: [taskId], references: [id])
-  
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id])
-  
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-  
-  approvedBy String?
-  approvedAt DateTime?
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("time_entries")
-}
-
-model Activity {
-  id          String         @id @default(cuid())
-  type        ActivityType
-  subject     String
-  description String?
-  date        DateTime
-  duration    Int? // in minutes
-  status      ActivityStatus @default(PLANNED)
-  priority    Priority       @default(MEDIUM)
-  location    String?
-  customFields Json?
-  
-  // Polymorphic relations
-  relatedToType String // 'lead', 'contact', 'account', 'deal', 'project', 'task'
-  relatedToId   String
-  
-  leadId    String?
-  lead      Lead?    @relation(fields: [leadId], references: [id])
-  contactId String?
-  contact   Contact? @relation(fields: [contactId], references: [id])
-  accountId String?
-  account   Account? @relation(fields: [accountId], references: [id])
-  dealId    String?
-  deal      Deal?    @relation(fields: [dealId], references: [id])
-  projectId String?
-  project   Project? @relation(fields: [projectId], references: [id])
-  taskId    String?
-  task      Task?    @relation(fields: [taskId], references: [id])
-  
-  assignedToId String?
-  assignedTo   User?   @relation("ActivityAssignedTo", fields: [assignedToId], references: [id])
-  createdById  String
-  createdBy    User    @relation("ActivityCreatedBy", fields: [createdById], references: [id])
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("activities")
 }
 
 enum ActivityType {
@@ -455,4 +416,97 @@ enum ActivityStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+}
+
+// Task Management System Models
+model TaskManagement {
+  id             String                @id @default(cuid())
+  title          String
+  description    String?
+  status         TaskManagementStatus  @default(NOT_STARTED)
+  priority       TaskManagementPriority @default(MEDIUM)
+  dueDate        DateTime?
+  completedAt    DateTime?
+  completionNote String?
+  
+  createdById    String
+  createdBy      User    @relation("TaskManagementCreatedBy", fields: [createdById], references: [id])
+  assignedToId   String
+  assignedTo     User    @relation("TaskManagementAssignedTo", fields: [assignedToId], references: [id])
+  
+  comments       TaskManagementComment[]
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("task_management")
+}
+
+model TaskManagementComment {
+  id      String         @id @default(cuid())
+  taskId  String
+  task    TaskManagement @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User           @relation("TaskManagementCommentUser", fields: [userId], references: [id])
+  comment String
+  
+  createdAt DateTime @default(now())
+
+  @@map("task_management_comments")
+}
+
+model TaskManagementTemplate {
+  id             String                 @id @default(cuid())
+  name           String
+  title          String
+  description    String?
+  priority       TaskManagementPriority @default(MEDIUM)
+  estimatedHours Int?
+  
+  createdById    String
+  createdBy      User    @relation("TaskManagementTemplateCreatedBy", fields: [createdById], references: [id])
+  
+  recurringTasks RecurringTaskManagement[]
+  
+  createdAt      DateTime @default(now())
+
+  @@map("task_management_templates")
+}
+
+model RecurringTaskManagement {
+  id                 String                      @id @default(cuid())
+  templateId         String
+  template           TaskManagementTemplate      @relation(fields: [templateId], references: [id])
+  recurrenceType     TaskRecurrenceType
+  recurrenceInterval Int                         @default(1)
+  nextDueDate        DateTime
+  assignedToId       String
+  assignedTo         User                        @relation("RecurringTaskManagementAssignedTo", fields: [assignedToId], references: [id])
+  createdById        String
+  createdBy          User                        @relation("RecurringTaskManagementCreatedBy", fields: [createdById], references: [id])
+  isActive           Boolean                     @default(true)
+  
+  createdAt          DateTime @default(now())
+
+  @@map("recurring_task_management")
+}
+
+enum TaskManagementStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  ON_HOLD
+}
+
+enum TaskManagementPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskRecurrenceType {
+  DAILY
+  WEEKLY
+  MONTHLY
 }
