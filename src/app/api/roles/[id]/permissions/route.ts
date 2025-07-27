@@ -3,15 +3,16 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const { data, error } = await supabaseAdmin
       .from('role_permissions')
       .select(`
         permission:permissions(*)
       `)
-      .eq('role_id', params.id)
+      .eq('role_id', id)
 
     if (error) {
       console.error('Error fetching role permissions:', error)
@@ -34,9 +35,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const { permissionIds } = body
 
@@ -51,12 +53,12 @@ export async function POST(
     await supabaseAdmin
       .from('role_permissions')
       .delete()
-      .eq('role_id', params.id)
+      .eq('role_id', id)
 
     // Then add the new permissions
     if (permissionIds.length > 0) {
       const rolePermissions = permissionIds.map(permissionId => ({
-        role_id: params.id,
+        role_id: id,
         permission_id: permissionId
       }))
 

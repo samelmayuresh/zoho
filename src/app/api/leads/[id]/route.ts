@@ -7,7 +7,7 @@ import { updateLeadScoreAndRating } from '@/lib/lead-scoring'
 const prisma = new PrismaClient()
 
 // GET /api/leads/[id] - Get single lead
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const cookieStore = await cookies()
     const sessionCookie = cookieStore.get('crm-session')
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     const sessionData = JSON.parse(sessionCookie.value)
-    const leadId = params.id
+    const { id: leadId } = await params
 
     const lead = await prisma.lead.findUnique({
       where: { id: leadId },
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // PUT /api/leads/[id] - Update lead
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const cookieStore = await cookies()
     const sessionCookie = cookieStore.get('crm-session')
@@ -69,7 +69,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     const sessionData = JSON.parse(sessionCookie.value)
-    const leadId = params.id
+    const { id: leadId } = await params
 
     // Check permissions
     if (!['ADMIN', 'EDITOR'].includes(sessionData.role)) {
@@ -129,7 +129,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE /api/leads/[id] - Delete lead
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const cookieStore = await cookies()
     const sessionCookie = cookieStore.get('crm-session')
@@ -139,7 +139,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 
     const sessionData = JSON.parse(sessionCookie.value)
-    const leadId = params.id
+    const { id: leadId } = await params
 
     // Only ADMIN can delete leads
     if (sessionData.role !== 'ADMIN') {

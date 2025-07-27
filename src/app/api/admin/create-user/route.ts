@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       })
       
       if (!emailResult.success) {
-        console.warn('Email sending failed:', emailResult.error)
+        console.warn('Email sending failed:', 'error' in emailResult ? emailResult.error : 'Unknown error')
       }
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError)
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         })
         
         if (!smsResult.success) {
-          console.warn('SMS sending failed:', smsResult.error)
+          console.warn('SMS sending failed:', 'error' in smsResult ? smsResult.error : 'Unknown error')
         }
       } catch (smsError) {
         console.error('Failed to send SMS:', smsError)
@@ -113,11 +113,11 @@ export async function POST(request: NextRequest) {
     }
     
     // Email status
-    if (emailResult?.success && !emailResult?.mockEmail) {
+    if (emailResult?.success && !('mockEmail' in emailResult && emailResult.mockEmail)) {
       message += ' and credentials sent via email'
-    } else if (emailResult?.success && emailResult?.mockEmail) {
+    } else if (emailResult?.success && ('mockEmail' in emailResult && emailResult.mockEmail)) {
       message += '. Email logged to console (mock mode)'
-    } else if (emailResult?.simulatedEmail) {
+    } else if (emailResult && 'simulatedEmail' in emailResult) {
       message += '. Email configuration missing - credentials logged to console'
     } else {
       message += '. Email sending failed'
@@ -125,9 +125,9 @@ export async function POST(request: NextRequest) {
 
     // SMS status
     if (sendSMS && phone) {
-      if (smsResult?.success && !smsResult?.mockSMS) {
+      if (smsResult?.success && !('mockSMS' in smsResult && smsResult.mockSMS)) {
         message += ' and SMS'
-      } else if (smsResult?.success && smsResult?.mockSMS) {
+      } else if (smsResult?.success && ('mockSMS' in smsResult && smsResult.mockSMS)) {
         message += ' and SMS logged to console (mock mode)'
         credentials = smsResult.credentials
       } else {

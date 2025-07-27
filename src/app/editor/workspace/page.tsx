@@ -51,8 +51,6 @@ export default function EditorWorkspace() {
           <p className="text-gray-600">Create and manage leads, contacts, accounts, and deals</p>
         </div>
       </div>
-        </div>
-      </nav>
 
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Welcome Section */}

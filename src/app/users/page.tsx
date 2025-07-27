@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { PermissionGuard, RoleGuard } from '@/hooks/usePermissions'
 import { apiClient } from '@/lib/api-client'
 
